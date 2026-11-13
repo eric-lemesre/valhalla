@@ -11,7 +11,8 @@ set(debian_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/debian")
 # LICENSE.md is a symlink, the package needs the file
 get_filename_component(license "${PRIME_SERVER_LICENSE}" REALPATH)
 
-install(DIRECTORY "${stage}/${libdir}/" DESTINATION "${libdir}" COMPONENT runtime
+# keeps the library executable, rpm only reads the sonames of executable files
+install(DIRECTORY "${stage}/${libdir}/" DESTINATION "${libdir}" COMPONENT runtime USE_SOURCE_PERMISSIONS
   FILES_MATCHING PATTERN "libprime_server.so.*" PATTERN "cmake" EXCLUDE PATTERN "pkgconfig" EXCLUDE)
 install(DIRECTORY "${stage}/include/" DESTINATION include COMPONENT devel)
 install(DIRECTORY "${stage}/${libdir}/" DESTINATION "${libdir}" COMPONENT devel
