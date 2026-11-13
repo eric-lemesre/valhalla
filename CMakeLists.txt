@@ -493,6 +493,8 @@ if(${CPACK_GENERATOR} MATCHES "^DEB$")
   set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/valhalla/")
   set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
   set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+  # the binaries need libvalhalla from the shared component, found in the build tree
+  set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS "${CMAKE_BINARY_DIR}/src")
 
   set(CPACK_DEBIAN_SHARED_PACKAGE_NAME "libvalhalla0")
   set(CPACK_DEBIAN_SHARED_PACKAGE_SECTION "contrib/libs")
@@ -502,7 +504,9 @@ if(${CPACK_GENERATOR} MATCHES "^DEB$")
 
   set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "valhalla-bin")
   set(CPACK_DEBIAN_RUNTIME_PACKAGE_SECTION "contrib/misc")
-  set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION})")
+  set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION}), python3")
+  # valhalla_build_timezones
+  set(CPACK_DEBIAN_RUNTIME_PACKAGE_RECOMMENDS "curl, spatialite-bin, unzip")
 
   set(CPACK_DEBIAN_PYTHON_PACKAGE_NAME "python-valhalla")
   set(CPACK_DEBIAN_PYTHON_PACKAGE_SECTION "python")
@@ -515,8 +519,29 @@ if(${CPACK_GENERATOR} MATCHES "^DEB$")
   message(STATUS "Configured deb packages of ${CMAKE_CXX_LIBRARY_ARCHITECTURE} build for ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 endif()
 
-if(BUILD_SHARED_LIBS)
+if(${CPACK_GENERATOR} MATCHES "^RPM$")
+  set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
+  set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+  set(CPACK_RPM_PACKAGE_URL "https://github.com/valhalla/valhalla")
+
+  set(CPACK_RPM_SHARED_PACKAGE_NAME "valhalla-libs")
+
+  set(CPACK_RPM_DEVELOPMENT_PACKAGE_NAME "valhalla-devel")
+  set(CPACK_RPM_DEVELOPMENT_PACKAGE_REQUIRES "valhalla-libs = ${CPACK_PACKAGE_VERSION}")
+
+  set(CPACK_RPM_RUNTIME_PACKAGE_NAME "valhalla")
+  set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "valhalla-libs = ${CPACK_PACKAGE_VERSION}, python3")
+  # valhalla_build_timezones
+  set(CPACK_RPM_RUNTIME_PACKAGE_SUGGESTS "curl, spatialite-tools, unzip")
+
+  set(CPACK_RPM_PYTHON_PACKAGE_NAME "python3-valhalla")
+  set(CPACK_RPM_PYTHON_PACKAGE_REQUIRES "valhalla-libs = ${CPACK_PACKAGE_VERSION}")
+endif()
+
+if(BUILD_SHARED_LIBS AND ENABLE_PYTHON_BINDINGS)
   set(CPACK_COMPONENTS_ALL "shared;runtime;python")
+elseif(BUILD_SHARED_LIBS)
+  set(CPACK_COMPONENTS_ALL "shared;runtime")
 else()
   set(CPACK_COMPONENTS_ALL "development")
 endif()
