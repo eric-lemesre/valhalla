@@ -13,10 +13,15 @@ fi
 git clone --quiet --depth 1 --branch "$prime_server_version" --recurse-submodules \
   --shallow-submodules https://github.com/kevinkreiser/prime_server /build/prime_server
 cmake -S /build/prime_server -B /build/prime_server/build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_TESTS=OFF -DENABLE_WERROR=OFF
+  -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_TESTS=OFF -DENABLE_WERROR=OFF \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_EXE_LINKER_FLAGS=-pie
 cmake --build /build/prime_server/build
+cmake --install /build/prime_server/build --strip --prefix /build/prime_server/stage
+libdir=$(cd /build/prime_server/stage && find . -name 'libprime_server.so.*' -type f -printf '%h\n' | cut -c3-)
 cmake -S /src/packaging/prime_server -B /build/prime_server/package -G Ninja \
-  -DPRIME_SERVER_BUILD_DIR=/build/prime_server/build -DPRIME_SERVER_VERSION="$prime_server_version"
+  -DPRIME_SERVER_STAGE=/build/prime_server/stage -DPRIME_SERVER_LIBDIR="$libdir" \
+  -DPRIME_SERVER_VERSION="$prime_server_version" -DPRIME_SERVER_LICENSE=/build/prime_server/LICENSE.md \
+  -DCPACK_GENERATOR="$gen"
 (cd /build/prime_server/package && cpack -G "$gen" -B /build/packages)
 
 # installed so that Valhalla's packages get a dependency on it
@@ -27,7 +32,8 @@ esac
 
 cmake -S /src -B /build/valhalla -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
   -DBUILD_SHARED_LIBS=ON -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_TESTS=OFF \
-  -DENABLE_CCACHE=OFF -DENABLE_SINGLE_FILES_WERROR=OFF -DCPACK_GENERATOR="$gen"
+  -DENABLE_CCACHE=OFF -DENABLE_SINGLE_FILES_WERROR=OFF -DCPACK_GENERATOR="$gen" \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_EXE_LINKER_FLAGS=-pie
 cmake --build /build/valhalla
 (cd /build/valhalla && cpack -G "$gen" -B /build/packages)
 

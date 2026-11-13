@@ -480,9 +480,7 @@ set(CPACK_PACKAGE_VERSION_PATCH ${VALHALLA_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}${CPACK_PACKAGE_VERSION_SUFFIX}")
 set(CPACK_PACKAGE_CONTACT "Team Valhalla <valhalla@mapzen.com>")
 set(CPACK_RESOURCE_FILE_LICENSE "${VALHALLA_SOURCE_DIR}/LICENSE.md")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenStreetMap Routing API
- A set of routing APIs designed around OSM map data using
- dynamic costing and a tiled data structure")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenStreetMap Routing API")
   set(CPACK_COMPONENT_PYTHON_DESCRIPTION "OpenStreetMap Routing Python Bindings
  A set routing APIs designed around OSM map data using
  dynamic costing and a tiled data structure and
@@ -498,8 +496,17 @@ if(${CPACK_GENERATOR} MATCHES "^DEB$")
   # the binaries need libvalhalla from the shared component, found in the build tree
   set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS "${CMAKE_BINARY_DIR}/src")
 
+  set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "A set of routing APIs designed around OSM map data using
+dynamic costing and a tiled data structure.")
+  set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS ON)
+  set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY ">=")
+
   set(CPACK_DEBIAN_SHARED_PACKAGE_NAME "libvalhalla0")
   set(CPACK_DEBIAN_SHARED_PACKAGE_SECTION "contrib/libs")
+  # an ldconfig trigger, instead of the ldconfig calls CPack writes by default
+  set(CPACK_DEBIAN_SHARED_PACKAGE_CONTROL_EXTRA
+    "${VALHALLA_SOURCE_DIR}/cmake/debian/triggers;${VALHALLA_SOURCE_DIR}/cmake/debian/postinst;${VALHALLA_SOURCE_DIR}/cmake/debian/postrm")
+  set(CPACK_DEBIAN_SHARED_PACKAGE_CONTROL_STRICT_PERMISSION ON)
 
   set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_NAME "libvalhalla-dev")
   set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION})")
@@ -518,6 +525,27 @@ if(${CPACK_GENERATOR} MATCHES "^DEB$")
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
   endif()
 
+  # Debian policy wants a copyright file and a changelog (named as for a native package, the
+  # version having no Debian revision) in every package's doc directory
+  string(TIMESTAMP deb_changelog_date "%a, %d %b %Y %H:%M:%S +0000" UTC)
+  foreach(component shared runtime development python)
+    string(TOUPPER ${component} component_upper)
+    set(deb_package ${CPACK_DEBIAN_${component_upper}_PACKAGE_NAME})
+    set(deb_doc_dir ${CMAKE_BINARY_DIR}/debian-doc/${deb_package})
+    file(WRITE ${deb_doc_dir}/changelog
+      "${deb_package} (${CPACK_PACKAGE_VERSION}) unstable; urgency=medium\n\n"
+      "  * Valhalla ${CPACK_PACKAGE_VERSION}, see /usr/share/doc/valhalla/CHANGELOG.md.\n\n"
+      " -- ${CPACK_PACKAGE_CONTACT}  ${deb_changelog_date}\n")
+    execute_process(COMMAND gzip -9nf ${deb_doc_dir}/changelog RESULT_VARIABLE gzip_result)
+    if(NOT gzip_result EQUAL 0)
+      message(FATAL_ERROR "gzip failed on ${deb_doc_dir}/changelog")
+    endif()
+    install(FILES ${deb_doc_dir}/changelog.gz
+      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/${deb_package}" COMPONENT ${component})
+    install(FILES COPYING RENAME copyright
+      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/${deb_package}" COMPONENT ${component})
+  endforeach()
+
   message(STATUS "Configured deb packages of ${CMAKE_CXX_LIBRARY_ARCHITECTURE} build for ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 endif()
 
@@ -525,9 +553,8 @@ if(${CPACK_GENERATOR} MATCHES "^RPM$")
   set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
   set(CPACK_RPM_PACKAGE_LICENSE "MIT")
   set(CPACK_RPM_PACKAGE_URL "https://github.com/valhalla/valhalla")
-  # rpmbuild takes a one-line Summary
-  set(CPACK_RPM_PACKAGE_SUMMARY "OpenStreetMap Routing API")
-  set(CPACK_RPM_PACKAGE_DESCRIPTION "A set of routing APIs designed around OSM map data using dynamic costing and a tiled data structure")
+  set(CPACK_RPM_PACKAGE_DESCRIPTION "A set of routing APIs designed around OSM map data using
+dynamic costing and a tiled data structure.")
 
   set(CPACK_RPM_SHARED_PACKAGE_NAME "valhalla-libs")
 

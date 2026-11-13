@@ -19,6 +19,7 @@ esac
 image=valhalla-packaging:$dist
 docker build -f "$here/${gen,,}.Dockerfile" --build-arg BASE="$base" -t "$image" "$here"
 mkdir -p "$out"
+rm -f "$out"/*.deb "$out"/*.rpm
 docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
   -v "$src:/src:ro" -v "$out:/out" "$image" /src/packaging/build-in-container.sh "$gen"
 ls -l "$out"
