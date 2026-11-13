@@ -22,7 +22,7 @@ cmake -S /src/packaging/prime_server -B /build/prime_server/package -G Ninja \
 # installed so that Valhalla's packages get a dependency on it
 case $gen in
   DEB) dpkg -i /build/packages/*.deb ;;
-  RPM) rpm -i /build/packages/*.rpm ;;
+  RPM) rpm -i --nosignature /build/packages/*.rpm ;;
 esac
 
 cmake -S /src -B /build/valhalla -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
