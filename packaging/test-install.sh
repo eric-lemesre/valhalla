@@ -22,7 +22,7 @@ if command -v apt-get >/dev/null; then
   apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends /pkgs/*.deb >/dev/null
 else
   if grep -q "^ID=\"\?rocky" /etc/os-release; then dnf install -y -q epel-release >/dev/null; fi
-  dnf install -y -q /pkgs/*.rpm >/dev/null
+  dnf install -y -q --nogpgcheck /pkgs/*.rpm >/dev/null
 fi
 echo "python3: $(command -v python3 || echo absent)"
 for tool in valhalla_build_config valhalla_build_elevation valhalla_build_extract; do

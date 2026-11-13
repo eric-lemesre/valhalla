@@ -317,11 +317,13 @@ if(ENABLE_DATA_TOOLS)
   # otherwise the system sqlite3 is found which doesn't allow for spatialite
   find_package(SQLite3 REQUIRED)
   pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
-  # make sure we can build tz.sqlite
-  find_program(SPATIALITE_TOOL_EXECUTABLE NAMES spatialite_tool)
-  find_program(SPATIALITE_EXECUTABLE NAMES spatialite)
-  if(NOT SPATIALITE_TOOL_EXECUTABLE OR NOT SPATIALITE_EXECUTABLE)
-    message(FATAL_ERROR "spatialite-tools not found: need both 'spatialite_tool' and 'spatialite', install the correct package for your system.")
+  # make sure the tests can build tz.sqlite
+  if(ENABLE_TESTS)
+    find_program(SPATIALITE_TOOL_EXECUTABLE NAMES spatialite_tool)
+    find_program(SPATIALITE_EXECUTABLE NAMES spatialite)
+    if(NOT SPATIALITE_TOOL_EXECUTABLE OR NOT SPATIALITE_EXECUTABLE)
+      message(FATAL_ERROR "spatialite-tools not found: need both 'spatialite_tool' and 'spatialite', install the correct package for your system.")
+    endif()
   endif()
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
   pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
@@ -548,6 +550,9 @@ if(${CPACK_GENERATOR} MATCHES "^RPM$")
   set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
   set(CPACK_RPM_PACKAGE_LICENSE "MIT")
   set(CPACK_RPM_PACKAGE_URL "https://github.com/valhalla/valhalla")
+  # rpmbuild takes a one-line Summary
+  set(CPACK_RPM_PACKAGE_SUMMARY "OpenStreetMap Routing API")
+  set(CPACK_RPM_PACKAGE_DESCRIPTION "A set of routing APIs designed around OSM map data using dynamic costing and a tiled data structure")
 
   set(CPACK_RPM_SHARED_PACKAGE_NAME "valhalla-libs")
 
