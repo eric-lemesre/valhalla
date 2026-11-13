@@ -40,6 +40,7 @@ option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_HTTP "Enable the use of CURL" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
+option(ENABLE_RUST_TOOLS "Install the Rust valhalla_build_config, valhalla_build_elevation and valhalla_build_extract instead of the Python scripts" OFF)
 option(ENABLE_NODE_BINDINGS "Enable Node.js bindings" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
@@ -413,10 +414,34 @@ if(ENABLE_PYTHON_BINDINGS)
   endif()
 endif()
 
+set(rust_tools valhalla_build_config valhalla_build_elevation valhalla_build_extract)
+if(ENABLE_RUST_TOOLS)
+  find_program(CARGO_EXECUTABLE cargo)
+  if(NOT CARGO_EXECUTABLE)
+    message(FATAL_ERROR "ENABLE_RUST_TOOLS requires cargo")
+  endif()
+  set(rust_tools_dir ${CMAKE_BINARY_DIR}/rust-tools)
+  add_custom_target(valhalla_rust_tools ALL
+    COMMAND ${CARGO_EXECUTABLE} build --release --locked
+      --manifest-path ${VALHALLA_SOURCE_DIR}/src/bindings/rust/examples/Cargo.toml
+      -p valhalla-tools --target-dir ${rust_tools_dir}
+    COMMENT "Building the Rust valhalla_build_* tools"
+    USES_TERMINAL
+    VERBATIM)
+endif()
+
 # add the scripts to the build folder as well
 foreach(script valhalla_build_config valhalla_build_elevation
   valhalla_build_extract valhalla_build_timezones)
   configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
+
+  if(ENABLE_RUST_TOOLS AND script IN_LIST rust_tools)
+    install(
+      PROGRAMS ${rust_tools_dir}/release/${script}${CMAKE_EXECUTABLE_SUFFIX}
+      DESTINATION "${CMAKE_INSTALL_BINDIR}"
+      COMPONENT runtime)
+    continue()
+  endif()
 
   install(
     FILES
