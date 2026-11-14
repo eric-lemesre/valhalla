@@ -29,7 +29,7 @@ class MergeReport:
             print("\nNo differences found.", file=sys.stderr)
 
 
-def should_remove_key(key_path: str, remove_keys: list[str] | None) -> bool:
+def should_remove_key(key_path: str, remove_keys: Union[List[str], None]) -> bool:
     """
     Check if a key should be removed based on the remove_keys list.
 
@@ -50,7 +50,7 @@ def should_remove_key(key_path: str, remove_keys: list[str] | None) -> bool:
 
 
 def merge_json(
-    old: Any, new: Any, report: MergeReport, remove_keys: list[str] | None, path: str = ""
+    old: Any, new: Any, report: MergeReport, remove_keys: Union[List[str], None], path: str = ""
 ) -> Any:
     """
     Recursively merge two JSON values.
