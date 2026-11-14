@@ -26,8 +26,8 @@ const NAMED_OPTIONS: [&str; 8] = [
 /// closing bracket) and the FNV-1a hash of its lines with trailing whitespace trimmed.
 const GUARDED_BLOCKS: [(&str, Option<&str>, u64); 11] = [
     ("class MergeReport:", None, 0xd1d89beeffa36c5a),
-    ("def should_remove_key(", None, 0x675f110d479d5a98),
-    ("def merge_json(", None, 0x0e77b583639ed161),
+    ("def should_remove_key(", None, 0xc474c699b63e84f3),
+    ("def merge_json(", None, 0x69d4cc396c86f274),
     ("def strtobool(", None, 0x58d965ebb6746cc1),
     ("class Optional:", None, 0xabfb199bc2ba8f93),
     ("def ipc_endpoint(", None, 0x22f1d8952d64dd36),
