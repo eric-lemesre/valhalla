@@ -12,7 +12,7 @@ RUN if grep -q '^ID="\?fedora' /etc/os-release; then \
       dnf install -y gcc-toolset-14-gcc gcc-toolset-14-gcc-c++ gcc-toolset-14-libquadmath-devel; \
     fi \
   && dnf install -y \
-    cmake file git ninja-build pkgconf python3 rpm-build \
+    cmake file git help2man ninja-build pkgconf python3 rpm-build \
     bzip2 czmq-devel expat-devel geos-devel libcurl-devel libgeotiff-devel libspatialite-devel \
     libtiff-devel luajit-devel lz4-devel openssl-devel sqlite-devel zeromq-devel zlib-devel \
   && dnf clean all
