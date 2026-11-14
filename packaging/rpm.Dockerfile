@@ -12,7 +12,7 @@ RUN if grep -q '^ID="\?fedora' /etc/os-release; then \
       dnf install -y gcc-toolset-14-gcc gcc-toolset-14-gcc-c++ gcc-toolset-14-libquadmath-devel; \
     fi \
   && dnf install -y \
-    cmake file git help2man ninja-build pkgconf python3 rpm-build \
+    cmake file git help2man ninja-build pkgconf rpm-build \
     bzip2 czmq-devel expat-devel geos-devel libcurl-devel libgeotiff-devel libspatialite-devel \
     libtiff-devel luajit-devel lz4-devel openssl-devel sqlite-devel zeromq-devel zlib-devel \
   && dnf clean all
@@ -32,3 +32,7 @@ RUN if [ ! -d /usr/include/boost ]; then \
       curl -sSfL "https://archives.boost.io/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.bz2" \
         | tar -xj -C /usr/local/include --strip-components=1 "boost_${BOOST_VERSION//./_}/boost"; \
     fi
+
+ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path

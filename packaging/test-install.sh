@@ -24,6 +24,7 @@ else
   if grep -q "^ID=\"\?rocky" /etc/os-release; then dnf install -y -q epel-release >/dev/null; fi
   dnf install -y -q --nogpgcheck /pkgs/*.rpm >/dev/null
 fi
+echo "python3: $(command -v python3 || echo absent)"
 for tool in valhalla_build_config valhalla_build_elevation valhalla_build_extract; do
   echo "$tool: $(head -c 4 "$(command -v $tool)" | tr -dc "[:print:]") $($tool --help >/dev/null && echo help-ok)"
 done
