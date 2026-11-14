@@ -1,5 +1,24 @@
 #!/bin/sh
 
+case "$1" in
+  -h|--help)
+    cat <<EOF
+Builds the timezone SQLite database used by valhalla_build_tiles and writes it to stdout.
+
+Usage: $(basename "$0") > timezones.sqlite
+
+Downloads the 1970 timezone boundaries with oceans from timezone-boundary-builder with curl,
+unzips them in the current directory and imports them with spatialite_tool. The progress goes
+to stderr.
+
+Environment:
+  SPATIALITE       spatialite executable to use (default: spatialite)
+  SPATIALITE_TOOL  spatialite_tool executable to use (default: spatialite_tool)
+EOF
+    exit 0
+    ;;
+esac
+
 error_exit() {
   echo "error: $1" 1>&2
   exit 1

@@ -40,6 +40,7 @@ option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_HTTP "Enable the use of CURL" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
+option(ENABLE_MAN_PAGES "Generate the man pages of the installed programs from their --help with help2man" OFF)
 option(ENABLE_NODE_BINDINGS "Enable Node.js bindings" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
@@ -395,6 +396,7 @@ if(ENABLE_SERVICES)
     add_executable(${program} src/${program}.cc)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
+    target_include_directories(${program} PRIVATE ${cxxopts_include_dir})
     target_link_libraries(${program} valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
@@ -431,6 +433,42 @@ foreach(script valhalla_build_config valhalla_build_elevation
       COMPONENT runtime
     )
 endforeach()
+
+if(ENABLE_MAN_PAGES)
+  find_program(HELP2MAN_EXECUTABLE help2man REQUIRED)
+  set(man_programs "")
+  if(ENABLE_TOOLS)
+    list(APPEND man_programs ${valhalla_programs})
+  endif()
+  if(ENABLE_DATA_TOOLS)
+    list(APPEND man_programs ${valhalla_data_tools})
+  endif()
+  if(ENABLE_SERVICES)
+    list(APPEND man_programs ${valhalla_services})
+  endif()
+  set(man_pages "")
+  foreach(program ${man_programs} valhalla_build_config valhalla_build_elevation
+      valhalla_build_extract valhalla_build_timezones)
+    if(TARGET ${program})
+      set(program_path $<TARGET_FILE:${program}>)
+      set(program_target ${program})
+    else()
+      set(program_path ${CMAKE_BINARY_DIR}/${program})
+      set(program_target ${program_path})
+    endif()
+    set(man_page ${CMAKE_BINARY_DIR}/man/${program}.1.gz)
+    add_custom_command(OUTPUT ${man_page}
+      COMMAND ${CMAKE_COMMAND} -DHELP2MAN=${HELP2MAN_EXECUTABLE} -DPROGRAM=${program_path}
+        -DVERSION=${VALHALLA_VERSION_MAJOR}.${VALHALLA_VERSION_MINOR}.${VALHALLA_VERSION_PATCH}
+        -DOUTPUT=${man_page} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaManPage.cmake
+      DEPENDS ${program_target} ${VALHALLA_SOURCE_DIR}/cmake/ValhallaManPage.cmake
+      COMMENT "Generating the man page of ${program}"
+      VERBATIM)
+    list(APPEND man_pages ${man_page})
+  endforeach()
+  add_custom_target(valhalla_man_pages ALL DEPENDS ${man_pages})
+  install(FILES ${man_pages} DESTINATION "${CMAKE_INSTALL_MANDIR}/man1" COMPONENT runtime)
+endif()
 
 install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
@@ -565,6 +603,8 @@ dynamic costing and a tiled data structure.")
   set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "valhalla-libs = ${CPACK_PACKAGE_VERSION}, python3")
   # valhalla_build_timezones
   set(CPACK_RPM_RUNTIME_PACKAGE_SUGGESTS "curl, spatialite-tools, unzip")
+  # the filesystem package owns them
+  list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/share/man /usr/share/man/man1)
 
   set(CPACK_RPM_PYTHON_PACKAGE_NAME "python3-valhalla")
   set(CPACK_RPM_PYTHON_PACKAGE_REQUIRES "valhalla-libs = ${CPACK_PACKAGE_VERSION}")
